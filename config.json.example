@@ -1,0 +1,6 @@
+{
+	"host": "localhost",
+	"port": 8088,
+    "dooropen": null,
+    "doorbell": "2.wav"
+}
