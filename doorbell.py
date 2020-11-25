@@ -34,7 +34,7 @@ if not config['sounds']:
 
 filesnotfound = []
 for file in config['sounds']:
-    if not os.path.isfile(os.fsencode(str(config['sounds'][file]))):
+    if not os.path.isfile(os.fsencode(os.path.join("sounds", str(config['sounds'][file])))):
         filesnotfound.append(file)
 for file in filesnotfound:
     log.warning("File \"" + str(config['sounds'][file]) + "\" for result-value \"" + file + "\" not found")
@@ -75,7 +75,7 @@ class Doorbell(BaseHTTPRequestHandler):
 
     def playAudio(self, file):
         log.info("Playing audiofile \"" + str(file) + "\"")
-        wave_obj = simpleaudio.WaveObject.from_wave_file(file)
+        wave_obj = simpleaudio.WaveObject.from_wave_file(os.path.join("sounds", file))
         play_obj = wave_obj.play()
         #play_obj.wait_done()
 
