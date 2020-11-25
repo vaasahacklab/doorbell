@@ -1,6 +1,10 @@
 {
-	"host": "localhost",
-	"port": 8088,
-    "dooropen": null,
-    "doorbell": "2.wav"
+    "host": "127.0.0.1",
+    "port": 8088,
+    "sounds": {
+        "200": "200.wav",
+        "frontdoor": "knockknock.wav",
+        "MrSmith": "Crapola.wav",
+        "*": "catchall.wav"
+    }
 }

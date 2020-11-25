@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import logging, logging.config
 logging.config.fileConfig("logging.ini")
@@ -10,9 +9,9 @@ import sys
 import json
 import simpleaudio
 
-__all__ = ["Doorbell"]
-
 log = logging.getLogger("Doorbell")
+
+__all__ = ["Doorbell"]
 
 # Load config from file
 log.debug("Loading config file")
@@ -23,58 +22,72 @@ try:
 except ValueError as e:
     log.critical("config.json is malformed, got error:\n\t" + str(e))
     f.close()
+    raise e
 except Exception as e:
     log.critical("Failed loading config file, got error:\n\t" + str(e))
-    quit()
+    raise e
+
+if not config['sounds']:
+    error = "Need at least one resultcode:soundfile key-value -pair in config under \"sounds\"!"
+    log.critical(error)
+    raise ValueError(error)
+
+filesnotfound = []
+for file in config['sounds']:
+    if not os.path.isfile(os.fsencode(str(config['sounds'][file]))):
+        filesnotfound.append(file)
+for file in filesnotfound:
+    log.warning("File \"" + str(config['sounds'][file]) + "\" for result-value \"" + file + "\" not found")
+    del config['sounds'][file]
+del filesnotfound
 
 class Doorbell(BaseHTTPRequestHandler):
     def do_PUT(self):
         try: 
             content_len = int(self.headers.get('Content-Length'))
             data = json.loads(self.rfile.read(content_len))
-            if data['dooropened']:
-                log.info("Got request for successful door open")
-                self.send_response(204)
-                self.end_headers()
-                self.playAudio(config['dooropen'])
-            elif data['dooropened'] is False:
-                log.info("Got request for doorbell")
-                self.send_response(204)
-                self.end_headers()
-                self.playAudio(config['doorbell'])
+            if data['request']:
+                log.info("Got request: " + str(data['request']))
+                try:
+                    self.playAudio(config['sounds'][str(data['request'])])
+                    self.send_response(204)
+                except KeyError:
+                    try:
+                        if config['sounds']['*']:
+                            log.info("Using wildcard soundfile")
+                            self.playAudio(config['sounds']['*'])
+                            self.send_response(204)
+                    except KeyError:
+                        log.error("Soundfile configuration for \"" + str(data) + "\" does not exist!")
+                        self.send_error(415, message="Soundfile configuration for \"" + str(data) + "\" does not exist!")
+                except Exception as e:
+                    log.error("Unkown error: " + str(e))
+                    self.send_error(415, message="Unkown error: " + str(e))
+        except KeyError as e:
+            print(str(e))
+            log.error("Request did not contain \"request\" variable, got:\n\t" + (str(data)))
+            self.send_error(400, message="Request did not contain \"request\" variable, got: \"" + (str(data)) + "\"")
         except Exception as e:
-            log.error("Got invalid request, propably incorrect parameter in request, needs JSON \"dooropened\" true/false")
-            self.send_response(400)
+            log.error("Unkown error: " + str(e))
+            self.send_error(500, message=str(e))
+        finally:
             self.end_headers()
 
     def playAudio(self, file):
-        if file is None:
-            log.info("Audio disabled for request, skipping play")
-        if file is not None:
-            log.info("Playing audio for request")
-            wave_obj = simpleaudio.WaveObject.from_wave_file(file)
-            play_obj = wave_obj.play()
-            play_obj.wait_done()
+        log.info("Playing audiofile \"" + str(file) + "\"")
+        wave_obj = simpleaudio.WaveObject.from_wave_file(file)
+        play_obj = wave_obj.play()
+        #play_obj.wait_done()
 
-if __name__ == '__main__':
-    if config['dooropen'] is None and config['doorbell'] is None:
-        log.critical("Both dooropen and doorbell setting is disabled, quitting.")
-        quit()
+# If is run as standalone program
+if __name__ == "__main__":
+    __name__ = "Doorbell"
 
-    if not config['dooropen'] is None:
-        if not os.path.exists(os.path.join(config['dooropen'])):
-            log.critical("Door open enabled and sound file for door open doesn't exists")
-            quit()
-    if not config['doorbell'] is None:
-        if not os.path.exists(os.path.join(config['doorbell'])):
-            log.critical("Doorbell sound enabled and sound file for doorbell doesn't exists")
-            quit()
-
-    httpd = HTTPServer((config['host'], config['port']), Doorbell)
     log.info("Starting")
+    httpd = HTTPServer((config['host'], config['port']), Doorbell)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        pass
-    httpd.server_close()
-    log.info("Stopped")
+        log.debug("Caught Keyboard interrupt")
+    log.info("Stopping")
+    httpd.shutdown()

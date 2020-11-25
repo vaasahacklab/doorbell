@@ -6,6 +6,7 @@ Doorbell script to play sound when Hacklab "doorbell" is triggered
 System prerequirents:
 libasound2-dev
 python3-dev
+python3-pip
 
 For Debian-based systems run: `< requirements.apt xargs sudo apt install -y`
 
@@ -20,13 +21,20 @@ Install python modules
 
 ## Config
 
-Config.json.example provides example config, copy it to config.json and modify for your enviroment.
+Example is provided in `config.json.example`, copy it to `config.json` and modify for your enviroment.
 
 Configuration parameters and their meaning:
 
-`"host": "localhost"`, hostname or IP to listen on
-`"port": 8088`, port to listen on
-`"dooropen": null`, sound filename that plays when door is open
-`"doorbell": "2.wav"`, sound filename that plays when doorbell is ringed
+`"host": "localhost"`, hostname or IP to listen on, string, required
+`"port": 8088`, port to listen on, integer, required
 
-Either sound file setting can be set to `null` but not both together.
+Key-value string pairs inside `"sounds"`-section has request to filename mappings;
+`"frontdoor": "knockknock.wav"` for example would play `knockknock.wav` when dindong request comes for token `frontdoor`.
+
+Special wildcard key `"*"` can be set to play certain soundfile for any incoming token: `"*": "catchall.wav"`
+
+At least one key-value pair is required.
+
+## Usage
+
+Script waits incoming JSON-requests on configured port. it expects `{'request': 'frontdoor'}` string key-value (standard JSON), where `frontdoor` is the token to play doorbell for. If soundfile mapping exist for `frontdoor` in config, mapped soundfile will play, otherwise returns error to requester.
