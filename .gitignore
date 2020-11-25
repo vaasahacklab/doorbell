@@ -3,3 +3,5 @@ venv/
 __pycache__/
 config.json
 logs/
+sounds/*
+!sounds/catchall.wav
