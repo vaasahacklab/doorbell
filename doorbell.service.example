@@ -1,0 +1,15 @@
+# /etc/systemd/system/doorbell.service
+[Unit]
+Description=Doorbell
+After=network.target
+
+[Service]
+Type=simple
+User=doorbell
+Group=doorbell
+WorkingDirectory=/opt/doorbell/doorbell
+ExecStart=/opt/doorbell/doorbell/venv/bin/python doorbell.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

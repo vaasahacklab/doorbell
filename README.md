@@ -3,14 +3,22 @@ Doorbell script to play sound when Hacklab "doorbell" is triggered
 
 ## Installation
 
-System prerequirents:
+For Debian-based systems:
+
+Best practice is to run service as own system user, one can be created for example with:
+`sudo useradd -c "Doorbell System" -d /opt/doorbell -G audio -m -r -s /bin/nologin -U doorbell`
+
+Above creates system user named doorbell, home folder in /opt/doorbell, without login capabilies, and access to audio devices.
+
+One can login locally to such user for setupping with:  
+`sudo -Hu doorbell /bin/bash`
+
+System prerequirements:
 libasound2-dev
 python3-dev
 python3-pip
 
-For Debian-based systems:
-
-Run as system admin: `< requirements.apt xargs sudo apt install -y`
+Run as admin user: `< requirements.apt xargs sudo apt install -y`
 
 Run these as doorbell user:
 
@@ -41,3 +49,7 @@ At least one key-value pair is required.
 ## Usage
 
 Script waits incoming JSON-requests on configured port. it expects `{'request': 'frontdoor'}` string key-value (standard JSON), where `frontdoor` is the token to play doorbell for. If soundfile mapping exist for `frontdoor` in config, mapped soundfile will play, otherwise wildcard soundfile will play if configured. Failing both returns error to requester.
+
+### Systemd unit
+
+doorbell.service.example is provided as an example systemd service unit file, it assumes setup done as per installation section, adjust for your modifications.
