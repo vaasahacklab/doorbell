@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 
-import logging, logging.config
-logging.config.fileConfig("logging.ini")
-
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import os
 import sys
 import json
 import simpleaudio
+
+# Create logs -folder if not exist
+if not os.path.isdir(os.path.join(sys.path[0], "logs")):
+    os.mkdir(os.path.join(sys.path[0], "logs"), 0o755)
+
+import logging, logging.config
+logging.config.fileConfig("logging.ini")
 
 log = logging.getLogger("Doorbell")
 
@@ -43,7 +47,7 @@ del filesnotfound
 
 class Doorbell(BaseHTTPRequestHandler):
     def do_PUT(self):
-        try: 
+        try:
             content_len = int(self.headers.get('Content-Length'))
             data = json.loads(self.rfile.read(content_len))
             if data['request']:
