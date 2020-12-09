@@ -8,7 +8,11 @@ libasound2-dev
 python3-dev
 python3-pip
 
-For Debian-based systems run: `< requirements.apt xargs sudo apt install -y`
+For Debian-based systems:
+
+Run as system admin: `< requirements.apt xargs sudo apt install -y`
+
+Run these as doorbell user:
 
 Setup venv:
 `python3 -m venv venv`
